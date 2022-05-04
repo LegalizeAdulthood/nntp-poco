@@ -23,6 +23,12 @@ int main(int argc, char **argv)
         std::cout << '\n';
 
         session.selectNewsGroup("gmane.comp.lib.boost.user");
+
+        for (const std::string &header : session.articleHeader())
+        {
+            std::cout << header << '\n';
+        }
+        std::cout << '\n';
     }
     catch (const Poco::Exception &bang)
     {

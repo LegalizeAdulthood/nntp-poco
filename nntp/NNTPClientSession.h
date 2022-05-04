@@ -161,10 +161,9 @@ public:
 		/// NetException in case of a general network communication failure.
 
     std::vector<std::string> capabilities();
-
     std::vector<std::string> listNewsGroups(const std::string &wildMat);
-
     void selectNewsGroup(const std::string &newsgroup);
+    std::vector<std::string> articleHeader();
 
 protected:
 	enum StatusClass

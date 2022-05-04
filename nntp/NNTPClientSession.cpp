@@ -381,6 +381,24 @@ void NNTPClientSession::selectNewsGroup(const std::string &newsgroup)
     _highArticle = NumberParser::parseUnsigned(groupInfo[3]);
 }
 
+std::vector<std::string> NNTPClientSession::articleHeader()
+{
+    std::string response;
+    int status = sendCommand("HEAD", response);
+    if (!isPositiveCompletion(status)) throw NNTPException("Cannot get article header", response, status);
+
+    std::vector<std::string> header;
+    std::string line;
+    _socket.receiveMessage(line);
+    while (line != ".")
+    {
+        header.push_back(line);
+        _socket.receiveMessage(line);
+    }
+
+    return header;
+}
+
 
 void NNTPClientSession::sendMessage(const MailMessage& message)
 {
