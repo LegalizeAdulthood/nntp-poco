@@ -14,6 +14,7 @@
 
 #include "NNTPClientSession.h"
 
+#include "Poco/Net/DialogSocket.h"
 #include "Poco/Net/MailMessage.h"
 #include "Poco/Net/MailRecipient.h"
 #include "Poco/Net/MailStream.h"
@@ -53,6 +54,66 @@ using Poco::Environment;
 
 namespace Poco {
 namespace Net {
+
+
+class DialogStreamBuf: public Poco::UnbufferedStreamBuf
+{
+public:
+	DialogStreamBuf(DialogSocket& socket):
+		_socket(socket)
+	{
+	}
+	
+	~DialogStreamBuf()
+	{
+	}
+		
+private:
+	int readFromDevice()
+	{
+		return _socket.get();
+	}
+	
+	DialogSocket& _socket;
+};
+
+
+class DialogIOS: public virtual std::ios
+{
+public:
+	DialogIOS(DialogSocket& socket):
+		_buf(socket)
+	{
+		poco_ios_init(&_buf);
+	}
+	
+	~DialogIOS()
+	{
+	}
+	
+	DialogStreamBuf* rdbuf()
+	{
+		return &_buf;
+	}
+
+protected:
+	DialogStreamBuf _buf;
+};
+
+
+class DialogInputStream: public DialogIOS, public std::istream
+{
+public:
+	DialogInputStream(DialogSocket& socket):
+		DialogIOS(socket),
+		std::istream(&_buf)
+	{
+	}
+		
+	~DialogInputStream()
+	{
+	}
+};
 
 
 NNTPClientSession::NNTPClientSession(const StreamSocket& socket):
@@ -399,7 +460,7 @@ std::vector<std::string> NNTPClientSession::articleHeader()
     return header;
 }
 
-std::vector<std::string> NNTPClientSession::articleBody()
+std::vector<std::string> NNTPClientSession::articleRaw()
 {
     std::string response;
     int status = sendCommand("ARTICLE", response);
@@ -415,6 +476,18 @@ std::vector<std::string> NNTPClientSession::articleBody()
     }
 
     return body;
+}
+
+void NNTPClientSession::article(NewsArticle &article)
+{
+    std::string response;
+    int status = sendCommand("ARTICLE", response);
+    if (!isPositiveCompletion(status)) throw NNTPException("Cannot get article body", response, status);
+
+	DialogInputStream sis(_socket);
+	MailInputStream mis(sis);
+	article.read(mis);
+	while (mis.good()) mis.get(); // read any remaining junk
 }
 
 

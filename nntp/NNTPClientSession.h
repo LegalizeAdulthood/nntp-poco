@@ -33,6 +33,8 @@ namespace Net {
 
 class MailMessage;
 
+using NewsArticle = MailMessage;
+
 POCO_DECLARE_EXCEPTION(NNTP_API, NNTPException, NetException)
 
 class NNTP_API NNTPClientSession
@@ -164,7 +166,9 @@ public:
     std::vector<std::string> listNewsGroups(const std::string &wildMat);
     void selectNewsGroup(const std::string &newsgroup);
     std::vector<std::string> articleHeader();
-    std::vector<std::string> articleBody();
+    std::vector<std::string> articleRaw();
+
+    void article(NewsArticle &article);
 
 protected:
 	enum StatusClass
