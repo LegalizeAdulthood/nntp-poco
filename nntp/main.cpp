@@ -29,6 +29,12 @@ int main(int argc, char **argv)
             std::cout << header << '\n';
         }
         std::cout << '\n';
+
+        for (const std::string &line : session.articleBody())
+        {
+            std::cout << line << '\n';
+        }
+        std::cout << '\n';
     }
     catch (const Poco::Exception &bang)
     {

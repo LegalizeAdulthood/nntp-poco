@@ -399,6 +399,24 @@ std::vector<std::string> NNTPClientSession::articleHeader()
     return header;
 }
 
+std::vector<std::string> NNTPClientSession::articleBody()
+{
+    std::string response;
+    int status = sendCommand("ARTICLE", response);
+    if (!isPositiveCompletion(status)) throw NNTPException("Cannot get article body", response, status);
+
+    std::vector<std::string> body;
+    std::string line;
+    _socket.receiveMessage(line);
+    while (line != ".")
+    {
+        body.push_back(line);
+        _socket.receiveMessage(line);
+    }
+
+    return body;
+}
+
 
 void NNTPClientSession::sendMessage(const MailMessage& message)
 {

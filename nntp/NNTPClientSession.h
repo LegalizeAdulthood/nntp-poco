@@ -164,6 +164,7 @@ public:
     std::vector<std::string> listNewsGroups(const std::string &wildMat);
     void selectNewsGroup(const std::string &newsgroup);
     std::vector<std::string> articleHeader();
+    std::vector<std::string> articleBody();
 
 protected:
 	enum StatusClass
