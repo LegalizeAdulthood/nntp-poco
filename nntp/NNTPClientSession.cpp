@@ -28,6 +28,7 @@
 #include "Poco/MD5Engine.h"
 #include "Poco/SHA1Engine.h"
 #include "Poco/DigestStream.h"
+#include "Poco/NumberParser.h"
 #include "Poco/StreamCopier.h"
 #include "Poco/Base64Encoder.h"
 #include "Poco/Base64Decoder.h"
@@ -364,6 +365,20 @@ std::vector<std::string> NNTPClientSession::listNewsGroups(const std::string &wi
     }
 
     return newsgroups;
+}
+
+void NNTPClientSession::selectNewsGroup(const std::string &newsgroup)
+{
+    std::string response;
+    int status = sendCommand("GROUP", newsgroup, response);
+    if (!isPositiveCompletion(status)) throw NNTPException("Cannot set newsgroup", response, status);
+
+    // 211 90986 1 91036 gmane.comp.lib.boost.user
+    StringTokenizer groupInfo(response, " ");
+    _newsgroup = newsgroup;
+    _numArticles = NumberParser::parseUnsigned(groupInfo[1]);
+    _lowArticle = NumberParser::parseUnsigned(groupInfo[2]);
+    _highArticle = NumberParser::parseUnsigned(groupInfo[3]);
 }
 
 

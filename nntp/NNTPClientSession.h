@@ -164,6 +164,8 @@ public:
 
     std::vector<std::string> listNewsGroups(const std::string &wildMat);
 
+    void selectNewsGroup(const std::string &newsgroup);
+
 protected:
 	enum StatusClass
 	{
@@ -197,6 +199,12 @@ private:
 	std::string  _host;
 	DialogSocket _socket;
 	bool         _isOpen;
+
+    std::string _newsgroup;
+    using uint_t = unsigned int;
+    uint_t _numArticles{};
+    uint_t _lowArticle{};
+    uint_t _highArticle{};
 };
 
 
