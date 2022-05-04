@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "nntp-client",
+  "version": "1.0.0",
+  "dependencies": [
+    {
+      "name": "poco",
+      "features": [
+        "netssl"
+      ]
+    },
+    "openssl"
+  ]
+}
