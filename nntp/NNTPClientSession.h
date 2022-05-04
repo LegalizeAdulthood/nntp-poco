@@ -75,27 +75,6 @@ public:
 	Poco::Timespan getTimeout() const;
 		/// Returns the timeout for socket read operations.
 
-	void login(const std::string& hostname);
-		/// Greets the NNTP server by sending a EHLO command
-		/// with the given hostname as argument.
-		///
-		/// If the server does not understand the EHLO command,
-		/// a HELO command is sent instead.
-		///
-		/// Throws a NNTPException in case of a NNTP-specific error, or a
-		/// NetException in case of a general network communication failure.
-
-	void login();
-		/// Calls login(hostname) with the current host name.
-
-	void login(const std::string& hostname, LoginMethod loginMethod, const std::string& username, const std::string& password);
-		/// Logs in to the NNTP server using the given authentication method and the given
-		/// credentials.
-
-	void login(LoginMethod loginMethod, const std::string& username, const std::string& password);
-		/// Logs in to the NNTP server using the given authentication method and the given
-		/// credentials.
-
 	void open();
 		/// Reads the initial response from the NNTP server.
 		///
@@ -107,57 +86,6 @@ public:
 
 	void close();
 		/// Sends a QUIT command and closes the connection to the server.
-		///
-		/// Throws a NNTPException in case of a NNTP-specific error, or a
-		/// NetException in case of a general network communication failure.
-
-	void sendMessage(const MailMessage& message);
-		/// Sends the given mail message by sending a MAIL FROM command,
-		/// a RCPT TO command for every recipient, and a DATA command with
-		/// the message headers and content. Using this function results in
-		/// RCPT TO commands list generated from the recipient list supplied
-		/// with the message itself.
-		///
-		/// Throws a NNTPException in case of a NNTP-specific error, or a
-		/// NetException in case of a general network communication failure.
-
-	void sendMessage(const MailMessage& message, const Recipients& recipients);
-		/// Sends the given mail message by sending a MAIL FROM command,
-		/// a RCPT TO command for every recipient, and a DATA command with
-		/// the message headers and content. Using this function results in
-		/// message header being generated from the supplied recipients list.
-		///
-		/// Throws a NNTPException in case of a NNTP-specific error, or a
-		/// NetException in case of a general network communication failure.
-
-	void sendMessage(std::istream& istr);
-		/// Sends the mail message from the supplied stream. Content of the stream
-		/// is copied without any checking. Only the completion status is checked and,
-		/// if not valid, NNTPException is thrown.
-
-	int sendCommand(const std::string& command, std::string& response);
-		/// Sends the given command verbatim to the server
-		/// and waits for a response.
-		///
-		/// Throws a NNTPException in case of a NNTP-specific error, or a
-		/// NetException in case of a general network communication failure.
-
-	int sendCommand(const std::string& command, const std::string& arg, std::string& response);
-		/// Sends the given command verbatim to the server
-		/// and waits for a response.
-		///
-		/// Throws a NNTPException in case of a NNTP-specific error, or a
-		/// NetException in case of a general network communication failure.
-
-	void sendAddresses(const std::string& from, const Recipients& recipients);
-		/// Sends the message preamble by sending a MAIL FROM command,
-		/// and a RCPT TO command for every recipient.
-		///
-		/// Throws a NNTPException in case of a NNTP-specific error, or a
-		/// NetException in case of a general network communication failure.
-
-	void sendData();
-    /// Sends the message preamble by sending a DATA command.
 		///
 		/// Throws a NNTPException in case of a NNTP-specific error, or a
 		/// NetException in case of a general network communication failure.
@@ -190,15 +118,25 @@ protected:
 	static bool isTransientNegative(int status);
 	static bool isPermanentNegative(int status);
 
-	void login(const std::string& hostname, std::string& response);
-	void loginUsingLogin(const std::string& username, const std::string& password);
-	void loginUsingPlain(const std::string& username, const std::string& password);
 	DialogSocket& socket();
 	const std::string& host() const;
 
 private:
-	void sendCommands(const MailMessage& message, const Recipients* pRecipients = 0);
-	void transportMessage(const MailMessage& message);
+	int sendCommand(const std::string& command, std::string& response);
+		/// Sends the given command verbatim to the server
+		/// and waits for a response.
+		///
+		/// Throws a NNTPException in case of a NNTP-specific error, or a
+		/// NetException in case of a general network communication failure.
+
+	int sendCommand(const std::string& command, const std::string& arg, std::string& response);
+		/// Sends the given command verbatim to the server
+		/// and waits for a response.
+		///
+		/// Throws a NNTPException in case of a NNTP-specific error, or a
+		/// NetException in case of a general network communication failure.
+
+    std::vector<std::string> multiLineResponse();
 
 	std::string  _host;
 	DialogSocket _socket;
