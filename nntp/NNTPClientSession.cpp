@@ -348,6 +348,24 @@ std::vector<std::string> NNTPClientSession::capabilities()
     return capabilities;
 }
 
+std::vector<std::string> NNTPClientSession::listNewsGroups(const std::string &wildMat)
+{
+    std::string response;
+    int status = sendCommand("LIST NEWSGROUPS", wildMat, response);
+    if (!isPositiveCompletion(status)) throw NNTPException("Cannot list newsgroups", response, status);
+
+    std::vector<std::string> newsgroups;
+    std::string line;
+    _socket.receiveMessage(line);
+    while (line != ".")
+    {
+        newsgroups.push_back(line);
+        _socket.receiveMessage(line);
+    }
+
+    return newsgroups;
+}
+
 
 void NNTPClientSession::sendMessage(const MailMessage& message)
 {

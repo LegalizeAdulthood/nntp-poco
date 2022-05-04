@@ -162,6 +162,8 @@ public:
 
     std::vector<std::string> capabilities();
 
+    std::vector<std::string> listNewsGroups(const std::string &wildMat);
+
 protected:
 	enum StatusClass
 	{

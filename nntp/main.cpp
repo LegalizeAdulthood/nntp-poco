@@ -12,6 +12,13 @@ int main(int argc, char **argv)
     {
         std::cout << cap << '\n';
     }
+    std::cout << '\n';
+
+    for (const std::string &newsgroup : session.listNewsGroups("gmane.comp.*.boost.*"))
+    {
+        std::cout << newsgroup << '\n';
+    }
+    std::cout << '\n';
 
     return 0;
 }
