@@ -7,11 +7,6 @@
 //
 // Definition of the NNTPClientSession class.
 //
-// Copyright (c) 2005-2008, Applied Informatics Software Engineering GmbH.
-// and Contributors.
-//
-// SPDX-License-Identifier:	BSL-1.0
-//
 
 
 #ifndef Net_NNTPClientSession_INCLUDED
@@ -21,7 +16,6 @@
 #include "Poco/Net/Net.h"
 #include "Poco/Net/DialogSocket.h"
 #include "Poco/Net/NetException.h"
-#include "Poco/DigestEngine.h"
 #include "Poco/Exception.h"
 #include "Poco/Timespan.h"
 

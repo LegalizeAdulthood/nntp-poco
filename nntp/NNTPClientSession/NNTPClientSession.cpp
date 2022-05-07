@@ -5,30 +5,16 @@
 // Package: Mail
 // Module:  NNTPClientSession
 //
-// Copyright (c) 2005-2008, Applied Informatics Software Engineering GmbH.
-// and Contributors.
-//
-// SPDX-License-Identifier:	BSL-1.0
-//
 
 
 #include "NNTPClientSession.h"
 
 #include "Poco/Net/DialogSocket.h"
 #include "Poco/Net/MailMessage.h"
-#include "Poco/Net/MailRecipient.h"
 #include "Poco/Net/MailStream.h"
 #include "Poco/Net/SocketAddress.h"
-#include "Poco/Net/SocketStream.h"
 #include "Poco/Net/NetException.h"
-#include "Poco/Net/NetworkInterface.h"
-#include "Poco/Net/NTLMCredentials.h"
-#include "Poco/Net/SSPINTLMCredentials.h"
 #include "Poco/Environment.h"
-#include "Poco/HMACEngine.h"
-#include "Poco/MD5Engine.h"
-#include "Poco/SHA1Engine.h"
-#include "Poco/DigestStream.h"
 #include "Poco/NumberParser.h"
 #include "Poco/StreamCopier.h"
 #include "Poco/Base64Encoder.h"
@@ -41,11 +27,6 @@
 #include <iterator>
 
 
-using Poco::DigestEngine;
-using Poco::HMACEngine;
-using Poco::MD5Engine;
-using Poco::SHA1Engine;
-using Poco::DigestOutputStream;
 using Poco::StreamCopier;
 using Poco::Base64Encoder;
 using Poco::Base64Decoder;
