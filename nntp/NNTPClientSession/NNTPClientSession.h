@@ -19,6 +19,9 @@
 #include "Poco/Exception.h"
 #include "Poco/Timespan.h"
 
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Poco {
 namespace Net {
@@ -30,6 +33,18 @@ class MailMessage;
 using NewsArticle = MailMessage;
 
 POCO_DECLARE_EXCEPTION(NNTP_API, NNTPException, NetException)
+
+using uint_t = unsigned int;
+
+struct ActiveNewsGroup
+{
+    std::string newsGroup;
+    uint_t numArticles{};
+    uint_t lowArticle{};
+    uint_t highArticle{};
+};
+
+using GroupDesc = std::pair<std::string, std::string>;
 
 class NNTP_API NNTPClientSession
 	/// This class implements an Network News
@@ -63,10 +78,10 @@ public:
 	virtual ~NNTPClientSession();
 		/// Destroys the NNTPClientSession.
 
-	void setTimeout(const Poco::Timespan& timeout);
+	void setTimeout(const Timespan& timeout);
 		/// Sets the timeout for socket read operations.
 
-	Poco::Timespan getTimeout() const;
+    Timespan getTimeout() const;
 		/// Returns the timeout for socket read operations.
 
 	void open();
@@ -85,12 +100,14 @@ public:
 		/// NetException in case of a general network communication failure.
 
     std::vector<std::string> capabilities();
-    std::vector<std::string> listNewsGroups(const std::string &wildMat);
-    void selectNewsGroup(const std::string &newsgroup);
+    std::vector<GroupDesc> listNewsGroups( const std::string& wildMat );
+    ActiveNewsGroup selectNewsGroup( const std::string& newsgroup );
     std::vector<std::string> articleHeader();
     std::vector<std::string> articleRaw();
 
     void article(NewsArticle &article);
+    bool stat(uint_t article);
+    void article(uint_t number, NewsArticle &article);
 
 protected:
 	enum StatusClass
@@ -132,15 +149,15 @@ private:
 
     std::vector<std::string> multiLineResponse();
 
-	std::string  _host;
-	DialogSocket _socket;
-	bool         _isOpen;
+	std::string  m_host;
+	DialogSocket m_socket;
+	bool         m_isOpen;
 
-    std::string _newsgroup;
+    std::string m_newsGroup;
     using uint_t = unsigned int;
-    uint_t _numArticles{};
-    uint_t _lowArticle{};
-    uint_t _highArticle{};
+    uint_t m_numArticles{};
+    uint_t m_lowArticle{};
+    uint_t m_highArticle{};
 };
 
 
@@ -178,13 +195,13 @@ inline bool NNTPClientSession::isPermanentNegative(int status)
 
 inline DialogSocket& NNTPClientSession::socket()
 {
-	return _socket;
+	return m_socket;
 }
 
 
 inline const std::string& NNTPClientSession::host() const
 {
-	return _host;
+	return m_host;
 }
 
 

@@ -98,16 +98,16 @@ public:
 
 
 NNTPClientSession::NNTPClientSession(const StreamSocket& socket):
-	_socket(socket),
-	_isOpen(false)
+	m_socket(socket),
+	m_isOpen(false)
 {
 }
 
 
 NNTPClientSession::NNTPClientSession(const std::string& host, Poco::UInt16 port):
-	_host(host),
-	_socket(SocketAddress(host, port)),
-	_isOpen(false)
+	m_host(host),
+	m_socket(SocketAddress(host, port)),
+	m_isOpen(false)
 {
 }
 
@@ -126,36 +126,36 @@ NNTPClientSession::~NNTPClientSession()
 
 void NNTPClientSession::setTimeout(const Poco::Timespan& timeout)
 {
-	_socket.setReceiveTimeout(timeout);
+	m_socket.setReceiveTimeout(timeout);
 }
 
 
 Poco::Timespan NNTPClientSession::getTimeout() const
 {
-	return _socket.getReceiveTimeout();
+	return m_socket.getReceiveTimeout();
 }
 
 
 void NNTPClientSession::open()
 {
-	if (!_isOpen)
+	if (!m_isOpen)
 	{
 		std::string response;
-		int status = _socket.receiveStatusMessage(response);
+		int status = m_socket.receiveStatusMessage(response);
 		if (!isPositiveCompletion(status)) throw NNTPException("The news service is unavailable", response, status);
-		_isOpen = true;
+		m_isOpen = true;
 	}
 }
 
 
 void NNTPClientSession::close()
 {
-	if (_isOpen)
+	if (m_isOpen)
 	{
 		std::string response;
 		sendCommand("QUIT", response);
-		_socket.close();
-		_isOpen = false;
+		m_socket.close();
+		m_isOpen = false;
 	}
 }
 
@@ -164,11 +164,11 @@ std::vector<std::string> NNTPClientSession::multiLineResponse()
 {
     std::vector<std::string> response;
     std::string line;
-    _socket.receiveMessage(line);
+    m_socket.receiveMessage(line);
     while (line != ".")
     {
         response.push_back(line);
-        _socket.receiveMessage(line);
+        m_socket.receiveMessage(line);
     }
 
     return response;
@@ -183,16 +183,26 @@ std::vector<std::string> NNTPClientSession::capabilities()
     return multiLineResponse();
 }
 
-std::vector<std::string> NNTPClientSession::listNewsGroups(const std::string &wildMat)
+std::vector<GroupDesc> NNTPClientSession::listNewsGroups( const std::string& wildMat )
 {
     std::string response;
     int status = sendCommand("LIST NEWSGROUPS", wildMat, response);
     if (!isPositiveCompletion(status)) throw NNTPException("Cannot list newsgroups", response, status);
 
-    return multiLineResponse();
+    std::vector<std::string> groups = multiLineResponse();
+    std::vector<GroupDesc> groupDescs;
+    std::transform(groups.begin(), groups.end(), std::back_inserter(groupDescs), [](const std::string &line) {
+        auto pos = line.find_first_of(" \t");
+        if (pos == std::string::npos)
+        {
+            return GroupDesc{line, ""};
+        }
+        return GroupDesc{line.substr(0, pos), line.substr(line.find_first_not_of(" \t", pos + 1))};
+        });
+    return groupDescs;
 }
 
-void NNTPClientSession::selectNewsGroup(const std::string &newsgroup)
+ActiveNewsGroup NNTPClientSession::selectNewsGroup( const std::string& newsgroup )
 {
     std::string response;
     int status = sendCommand("GROUP", newsgroup, response);
@@ -200,10 +210,11 @@ void NNTPClientSession::selectNewsGroup(const std::string &newsgroup)
 
     // 211 90986 1 91036 gmane.comp.lib.boost.user
     StringTokenizer groupInfo(response, " ");
-    _newsgroup = newsgroup;
-    _numArticles = NumberParser::parseUnsigned(groupInfo[1]);
-    _lowArticle = NumberParser::parseUnsigned(groupInfo[2]);
-    _highArticle = NumberParser::parseUnsigned(groupInfo[3]);
+    m_newsGroup = newsgroup;
+    m_numArticles = NumberParser::parseUnsigned(groupInfo[1]);
+    m_lowArticle = NumberParser::parseUnsigned(groupInfo[2]);
+    m_highArticle = NumberParser::parseUnsigned(groupInfo[3]);
+    return { m_newsGroup, m_numArticles, m_lowArticle, m_highArticle };
 }
 
 std::vector<std::string> NNTPClientSession::articleHeader()
@@ -230,24 +241,42 @@ void NNTPClientSession::article(NewsArticle &article)
     int status = sendCommand("ARTICLE", response);
     if (!isPositiveCompletion(status)) throw NNTPException("Cannot get article body", response, status);
 
-	DialogInputStream sis(_socket);
+	DialogInputStream sis(m_socket);
 	MailInputStream mis(sis);
 	article.read(mis);
 	while (mis.good()) mis.get(); // read any remaining junk
 }
 
+bool NNTPClientSession::stat(uint_t article)
+{
+    std::string response;
+    int status = sendCommand("STAT", std::to_string(article), response);
+    return isPositiveCompletion(status);
+}
+
+void NNTPClientSession::article(uint_t number, NewsArticle &article)
+{
+    std::string response;
+    int status = sendCommand("ARTICLE", std::to_string(number), response);
+    if (!isPositiveCompletion(status)) throw NNTPException("Cannot get article body", response, status);
+
+    DialogInputStream sis(m_socket);
+    MailInputStream mis(sis);
+    article.read(mis);
+    while (mis.good()) mis.get(); // read any remaining junk
+}
 
 int NNTPClientSession::sendCommand(const std::string& command, std::string& response)
 {
-	_socket.sendMessage(command);
-	return _socket.receiveStatusMessage(response);
+	m_socket.sendMessage(command);
+	return m_socket.receiveStatusMessage(response);
 }
 
 
 int NNTPClientSession::sendCommand(const std::string& command, const std::string& arg, std::string& response)
 {
-	_socket.sendMessage(command, arg);
-	return _socket.receiveStatusMessage(response);
+	m_socket.sendMessage(command, arg);
+	return m_socket.receiveStatusMessage(response);
 }
 
 
