@@ -3,6 +3,7 @@
 #include <Poco/DateTimeFormatter.h>
 #include <Poco/Net/MailMessage.h>
 #include <Poco/NumberParser.h>
+#include <Poco/StringTokenizer.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -31,6 +32,8 @@ class NewsReader
     void displayArticle();
 
   private:
+    void getArticles();
+
     Poco::Net::NNTPClientSession m_session;
     std::vector<Poco::Net::GroupDesc> m_groupDescs;
     std::string m_currentGroup;
@@ -68,23 +71,13 @@ bool NewsReader::selectGroup()
     } while (group < 1 || group > static_cast<int>(m_groupDescs.size()));
     m_currentGroup = m_groupDescs[group - 1].first;
     m_activeGroup = m_session.selectNewsGroup(m_currentGroup);
-    m_articles.clear();
+    getArticles();
 
     return true;
 }
 
 bool NewsReader::selectArticle()
 {
-    for (unsigned int number = m_activeGroup.lowArticle, count = 0;
-         number <= m_activeGroup.highArticle && count < 10; ++number)
-    {
-        if (m_session.stat(number))
-        {
-            ++count;
-            m_articles[number] = std::make_unique<Poco::Net::NewsArticle>();
-            m_session.article(number, *m_articles[number]);
-        }
-    }
     unsigned int number;
     do
     {
@@ -119,6 +112,22 @@ bool NewsReader::selectArticle()
     return true;
 }
 
+void NewsReader::getArticles()
+{
+    m_articles.clear();
+
+    for (unsigned int number = m_activeGroup.lowArticle, count = 0;
+         number <= m_activeGroup.highArticle && count < 10; ++number)
+    {
+        if (m_session.stat(number))
+        {
+            ++count;
+            m_articles[number] = std::make_unique<Poco::Net::NewsArticle>();
+            m_session.article(number, *m_articles[number]);
+        }
+    }
+}
+
 void NewsReader::displayArticle()
 {
     const Poco::Net::NewsArticle &article = *m_articles[m_selectedArticle];
@@ -129,8 +138,29 @@ void NewsReader::displayArticle()
                                                  "%w %B %e, %Y")
               << '\n'
               << "Content-Type: " << article.getContentType() << '\n'
-              << '\n'
-              << article.getContent() << '\n';
+              << '\n';
+    const std::string content = article.getContent();
+    using ssize_t = std::string::size_type;
+    ssize_t begin = 0;
+    ssize_t end = content.size();
+    int count = 0;
+    while (begin != end)
+    {
+        ssize_t pos = content.find("\r\n", begin);
+        if (pos == std::string::npos)
+            pos = end;
+        std::cout << content.substr(begin, pos - begin) << '\n';
+        begin = pos == end ? end : pos + 2;
+        ++count;
+        if (count == 24)
+        {
+            std::cout << "-- More --\n";
+            std::string line;
+            std::getline(std::cin, line);
+            if (line == "q")
+                return;
+        }
+    }
 }
 
 } // namespace
