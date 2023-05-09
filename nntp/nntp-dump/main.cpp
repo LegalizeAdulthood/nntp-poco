@@ -22,6 +22,19 @@ void print(const Poco::Net::NewsArticle &article)
     std::cout << article.getContent() << '\n';
 }
 
+void print(const Poco::Net::GroupDesc &desc)
+{
+    std::cout << desc.first << ' ' << desc.second << '\n';
+}
+
+void print(const std::vector<Poco::Net::GroupDesc> &descs)
+{
+    for (const Poco::Net::GroupDesc &desc : descs)
+    {
+        print(desc);
+    }
+}
+
 void separator()
 {
     std::cout << std::string(70, '=') << "\n\n";

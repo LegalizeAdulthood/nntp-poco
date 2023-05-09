@@ -178,7 +178,8 @@ std::vector<std::string> NNTPClientSession::capabilities()
 {
     std::string response;
     int status = sendCommand("CAPABILITIES", response);
-	if (!isPositiveInformation(status)) throw NNTPException("Cannot get capabilities", response, status);
+    if (!isPositiveInformation(status))
+        throw NNTPException("Cannot get capabilities", response, status);
 
     return multiLineResponse();
 }
@@ -239,12 +240,14 @@ void NNTPClientSession::article(NewsArticle &article)
 {
     std::string response;
     int status = sendCommand("ARTICLE", response);
-    if (!isPositiveCompletion(status)) throw NNTPException("Cannot get article body", response, status);
+    if (!isPositiveCompletion(status))
+        throw NNTPException("Cannot get article body", response, status);
 
-	DialogInputStream sis(m_socket);
-	MailInputStream mis(sis);
-	article.read(mis);
-	while (mis.good()) mis.get(); // read any remaining junk
+    DialogInputStream sis(m_socket);
+    MailInputStream mis(sis);
+    article.read(mis);
+    while (mis.good())
+        mis.get(); // read any remaining junk
 }
 
 bool NNTPClientSession::stat(uint_t article)
